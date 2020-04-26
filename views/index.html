@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="/js/indexClient.js" type="text/javascript"></script>
+        <link rel="stylesheet" href="/css/basic.css" type="text/css">
+    </head>
+    
+    <body>
+        <div id="message__container">
+            <ul id="messages"></ul>
+        </div>
+        <div class="personnalInformation">
+            <h2>Votre Rôle:</h2>
+            <p id="roleName">------</p>
+            <div id="hitlerRevealName" style="display:none;">
+                <h3>Votre hitler (ou votre faciste, si vous êtes Hitler) est:</h3>
+                <p id="hitlerName"></p>
+            </div>
+        </div>
+        <div>
+            <h2>Le Plateau</h2>
+
+            <p>Facistes</p>
+            <div id="facistBoard">
+
+            </div>
+
+            <p>Libérals</p>
+            <div id="liberalBoard">
+
+            </div>
+        </div>
+        <div id="connectDiv">
+            <h1>Secret Hitlet Online!</h1>
+            <input id="username" type="text" name="username"/>
+            <button type="button" id="connectButton">Se Connecter!</button>
+        </div> 
+        <div id="startGame" style="display:none;">
+            <button type="button">Démarrer la partie!</button>
+        </div>
+        <div id="playDiv" style="display:none;">
+            <button type="button" id="IAmPresident">Je suis Président!</button>
+            <button type="button" id="IAmChancelor">Je suis Chancelier!</button>
+        </div>
+        <div id="cardView" style="display:none;">
+            <!-- Des boutons avec les cartes seront ajoutés-->
+        </div>
+        <div id="waiting" style="display:none;">
+            <p>Veuillez patienter pendant que le président et le chancelier choisissent leur cartes :)</p>
+        </div>
+        
+        <div id="adminControl" style="display:none;">
+            <h2>Admin Controls</h2>
+            <button id="playRandomCard">Jouer la première carte random</button>
+            <button id="playLiberal">[N] Mettre une carte Libérale</button>
+            <button id="playFacist">[N] Mettre une carte Faciste</button>
+            <button id="resetLeTour">[N] Reset le tour</button>
+        </div>
+    </body>
+</html>
+
+<script>
+    var socket;
+    function clickPolicy(value){
+        socket.emit('policyChoosenPart1', value);
+    }
+    function clickPolicy2(value){
+        socket.emit('policyChoosenPart2', value);
+    }
+    
+
+    $(document).ready(function() {
+        socket = io('ws://secrethitler.williamlangevin.com');
+        var mySocketId;
+        socket.on('connect', function(){
+            mySocketId = socket.id;
+        });
+
+        $('#connectButton').on('click', function(){
+            var username = $('#username').val();
+            socket.emit('newPlayer', {
+                username: username 
+            });
+            $('#connectDiv').hide();
+            $('#startGame').show();
+        });
+
+        $('#startGame').on('click', function(){
+            socket.emit('startGame', mySocketId);
+        });
+
+        $('#IAmPresident').on('click', function(){
+            socket.emit('IAmPresident', mySocketId);
+        });
+
+        $('#IAmChancelor').on('click', function(){
+            socket.emit('IAmChancelor', mySocketId);
+        });
+
+        socket.on('newPlayerAnnouncement', function(message){
+                $('#messages').prepend($('<li>').text(message));
+            });
+
+        socket.on('messageGeneral', function(message){
+                $('#messages').prepend($('<li>').text(message));
+            });
+
+        socket.on('customError', function(error){
+            if(error.destination == mySocketId){
+                $('#messages').prepend($('<li class="errorMessage">').text(error.message));
+            }
+        });
+
+        socket.on('cardGiving', function(card){
+            if(card.destination == mySocketId){
+                $('#roleName').text(card.value);
+            }
+            $('#startGame').hide();
+            $('#playDiv').show();
+        });
+
+        socket.on('hitlerRevealed', function(revelation){
+            if(revelation.destination == mySocketId){
+                $('#hitlerName').text(revelation.value);
+
+                $('#hitlerRevealName').show();
+            }
+        });
+
+        socket.on('presidentChoosen', function(){
+            $('#IAmPresident').hide();
+        });
+        socket.on('chancelorChoosen', function(){
+            $('#IAmChancelor').hide();
+        });
+
+        socket.on('democrativeSessionPart1', function(role){
+            if(role.destination == mySocketId){
+                $('#playDiv').hide();
+
+                if(role.role == 0){
+
+                    $('#waiting').show();
+                    //President
+                } else if(role.role == 1){
+                    $('#cardView').show();
+
+                    var policies = role.policies;
+                    for(var i = 0; i < policies.length; i++){
+                        $('#cardView').append('<button type="button" onClick="clickPolicy(\'' + policies[i] + '\')">' + policies[i] + '</button>')
+                    }
+                    //chancelor
+                } else if(role.role == 2){
+                    $('#waiting').show();
+                }
+            }
+        });
+
+        socket.on('democrativeSessionPart2', function(role){
+            if(role.destination == mySocketId){
+                $('#playDiv').hide();
+
+                if(role.role == 0){
+
+                    $('#waiting').show();
+                    //President
+                } else if(role.role == 1){
+                    $('#cardView').hide();
+                    $('#waiting').show();
+                    //chancelor
+                } else if(role.role == 2){
+                    $('#waiting').hide();
+                    $('#cardView').show();
+
+                    var policies = role.policies;
+                    for(var i = 0; i < policies.length; i++){
+                        $('#cardView').append('<button type="button" onClick="clickPolicy2(\'' + policies[i] + '\')">' + policies[i] + '</button>')
+                    }
+                }
+            }
+        });
+
+        socket.on('democrativeSessionEnd', function(role){
+            if(role.destination == mySocketId){
+
+                $('#waiting').hide();
+                $('#cardView').hide();
+                $('#cardView').html('');
+                
+                $('#IAmPresident').show();
+                $('#IAmChancelor').show();
+                $('#playDiv').show();
+
+                if(role.playedPolicy == 'Facist'){
+                    $('#facistBoard').append('<p>F</p>');
+                } else if(role.playedPolicy == 'Liberal'){
+                    $('#liberalBoard').append('<p>L</p>');
+                }
+            }
+        });
+
+        //Administrative functions
+        $('#playRandomCard').on('click', function(){
+            socket.emit('playRandomCard');
+        });
+        $('#playLiberal').on('click', function(){
+
+        });
+        $('#playFacist').on('click', function(){
+            
+        });
+    });
+</script>
