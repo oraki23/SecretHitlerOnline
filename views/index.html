@@ -11,6 +11,16 @@
         <div id="message__container">
             <ul id="messages"></ul>
         </div>
+        <div id="playerList">
+            <h2>Les joueurs</h2>
+            <table id="playerListTable">
+                <!-- Kept for templating -->
+                <!-- <tr>
+                    <td>Anto</td>
+                    <td>Connecté</td>
+                </tr> -->
+            </table>
+        </div>
         <div class="personnalInformation">
             <h2>Votre Rôle:</h2>
             <p id="roleName">------</p>
@@ -70,19 +80,33 @@
         socket.emit('policyChoosenPart2', value);
     }
     
+    function addCardToLiberalBoard(){
+        $('#liberalBoard').append('<p>L</p>');
+    }
+    function addCardToFacistBoard(){
+        $('#facistBoard').append('<p>F</p>');
+    }
 
     $(document).ready(function() {
-        socket = io('ws://secrethitler.williamlangevin.com');
+        socket = io('ws://localhost:8000');
         var mySocketId;
+        var myUsername;
         socket.on('connect', function(){
             mySocketId = socket.id;
         });
 
         $('#connectButton').on('click', function(){
+            if(localStorage.getItem('userUniqueId') == null){
+                var randomlyGeneratedUID = Math.random().toString(36).substring(3,16) + +new Date;
+                localStorage.setItem('userUniqueId', randomlyGeneratedUID);
+            }
+
             var username = $('#username').val();
-            socket.emit('newPlayer', {
-                username: username 
+            socket.emit('newPlayerConnected', {
+                username: username,
+                browserId: localStorage.getItem('userUniqueId')
             });
+            myUsername = username;
             $('#connectDiv').hide();
             $('#startGame').show();
         });
@@ -92,16 +116,43 @@
         });
 
         $('#IAmPresident').on('click', function(){
-            socket.emit('IAmPresident', mySocketId);
+            socket.emit('IAmPresident', myUsername);
         });
 
         $('#IAmChancelor').on('click', function(){
-            socket.emit('IAmChancelor', mySocketId);
+            socket.emit('IAmChancelor', myUsername);
         });
 
-        socket.on('newPlayerAnnouncement', function(message){
-                $('#messages').prepend($('<li>').text(message));
+        socket.on('playerRelatedAnnouncement', function(message){
+                $('#messages').prepend($('<li style="background-color:green;">').text(message));
             });
+
+        socket.on('playerListModification', function(playerInformations){
+            $('#playerListTable').html('');
+
+            for(var i = 0; i < playerInformations.length; i++){
+                $('#playerListTable').append('<tr>' +
+                    '<td>' + playerInformations[i].name + '</td>' +
+                    '<td>'+ playerInformations[i].status +'</td>' +
+                '</tr>');
+            }
+        });
+        
+        socket.on('reconnectionCompleted', function(informations){
+            $('#roleName').text(informations.roleName);
+            for(var i = 0; i < informations.cardPlayed.length; i++){
+                var card = informations.cardPlayed[i];
+                
+                if(card == 'Liberal'){
+                    addCardToLiberalBoard();
+                } else if(card == 'Facist'){
+                    addCardToFacistBoard();
+                }
+            }
+
+            $('#startGame').hide();
+            $('#playDiv').show();
+        });
 
         socket.on('messageGeneral', function(message){
                 $('#messages').prepend($('<li>').text(message));

@@ -1,3 +1,4 @@
+
 const Player = require('./classes/Player.js');
 const Context = require('./classes/Context.js');
 const Game = require('./classes/Game.js');
@@ -8,6 +9,9 @@ const app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
+var context = new Context();
+
+const playerManagement = require('./classes/events/playerManagement.js')(io, context);
 
 app.use(express.static('public'));
 app.use('/socket.io', express.static(__dirname + '/node_modules/socket.io-client/dist'));
@@ -16,44 +20,10 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/views/index.html');
 });
 
-
-var context = new Context();
-
 io.on('connection', (socket) => {
-    console.log('a user connected! ' + socket.id);
-    socket.on('disconnect', (reason) => {
-        if (reason === 'io server disconnect') {
-            // the disconnection was initiated by the server, you need to reconnect manually
-            socket.connect();
-          }
-        console.log('a user disconnected! ' + socket.id);
-        context.removePlayer(socket.id);
-    });
-    socket.on('reconnect', (attemptNumber) => {
-        console.log(socket.id);
-    });
+    
 
     //Flow Normal
-    socket.on('newPlayer', (connectinfo) => {
-        console.log('userid: ' + socket.id);
-
-        //Add user if he is not already connected
-        if(context.players.some(player => player.id == socket.id)){
-            io.emit('customError', {
-                destination : socket.id,
-                message: 'Vous êtes déjà connecté!'
-            });
-        } else if(context.players.some(player => player.name == connectinfo.username)){
-            io.emit('customError', {
-                destination : socket.id,
-                message: 'Ce nom est déjà utilisé!'
-            });
-        } else{
-            var player = new Player(socket.id, connectinfo.username);
-            context.addPlayer(player);
-            io.emit('newPlayerAnnouncement', 'Un nouveau joueur a joint: ' + connectinfo.username);
-        }
-    });
 
     socket.on('startGame', (userId) => {
         console.log('Starting Game');
@@ -103,10 +73,10 @@ io.on('connection', (socket) => {
         } 
     });
 
-    socket.on('IAmPresident', (userId) => {
-        context.game.president = userId;
+    socket.on('IAmPresident', (username) => {
+        context.game.president = username;
         
-        var presidentId = context.players.findIndex(pl => pl.id == userId);
+        var presidentId = context.players.findIndex(pl => pl.name == username);
         var president = context.players[presidentId];
 
         console.log('Le président est: ' + president.name);
@@ -120,10 +90,10 @@ io.on('connection', (socket) => {
             for(var i = 0; i < context.players.length; i++){
                 var player = context.players[i];
                 var role = 0;
-                if(player.id == context.game.president){
+                if(player.name == context.game.president){
                     console.log('President assigned!');
                     role = 1;
-                } else if (player.id == context.game.chancelor){
+                } else if (player.name == context.game.chancelor){
                     console.log('Chancelor assigned!');
                     role = 2;
                 }
@@ -137,10 +107,10 @@ io.on('connection', (socket) => {
             }
         }
     });
-    socket.on('IAmChancelor', (userId) => {
-        context.game.chancelor = userId;
+    socket.on('IAmChancelor', (username) => {
+        context.game.chancelor = username;
 
-        var chancelorId = context.players.findIndex(pl => pl.id == userId);
+        var chancelorId = context.players.findIndex(pl => pl.name == username);
         var chancelor = context.players[chancelorId];
 
         console.log('Le chancelier est: ' + chancelor.name);
@@ -154,10 +124,10 @@ io.on('connection', (socket) => {
             for(var i = 0; i < context.players.length; i++){
                 var player = context.players[i];
                 var role = 0;
-                if(player.id == context.game.president){
+                if(player.name == context.game.president){
                     console.log('President assigned!');
                     role = 1;
-                } else if (player.id == context.game.chancelor){
+                } else if (player.name == context.game.chancelor){
                     console.log('Chancelor assigned!');
                     role = 2;
                 }
@@ -181,12 +151,12 @@ io.on('connection', (socket) => {
         for(var i = 0; i < context.players.length; i++){
             var player = context.players[i];
             var role = 0;
-            if(player.id == context.game.president){
+            if(player.name == context.game.president){
                 role = 1;
-            } else if (player.id == context.game.chancelor){
+            } else if (player.name == context.game.chancelor){
                 role = 2;
             }
-
+            
             var policies = context.game.policiesInHand;
             io.emit('democrativeSessionPart2', {
                 destination: player.id,
@@ -214,9 +184,9 @@ io.on('connection', (socket) => {
         for(var i = 0; i < context.players.length; i++){
             var player = context.players[i];
             var role = 0;
-            if(player.id == context.game.president){
+            if(player.name == context.game.president){
                 role = 1;
-            } else if (player.id == context.game.chancelor){
+            } else if (player.name == context.game.chancelor){
                 role = 2;
             }
 

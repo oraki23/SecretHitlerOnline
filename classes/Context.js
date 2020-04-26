@@ -1,7 +1,7 @@
 module.exports = class Context{
     constructor(){
         this.players = [];
-        this.game = [];
+        this.game = null;
     }
 
     addPlayer(player){
@@ -10,5 +10,21 @@ module.exports = class Context{
 
     removePlayer(socketId){
         this.players = this.players.filter(player => player.id !== socketId);
+    }
+
+    findPlayerById(socketId){
+        return this.players.find(player => player.id === socketId);
+    }
+
+    gameIsStarted(){
+        return this.game != null;
+    }
+
+    playersPublishable(){
+        var toReturn = [];
+        for(var i = 0; i < this.players.length; i++){
+            toReturn.push(this.players[i].playerPublishable());
+        }
+        return toReturn;
     }
 }
