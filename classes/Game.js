@@ -116,6 +116,13 @@ module.exports = class Game{
         return this.policiesInHand;
     }
 
+    getThreeTopPolicyValues(){
+        var l = this.policiesNotDrawn.length;
+        var topThree = [this.policiesNotDrawn[l-1], this.policiesNotDrawn[l-2], this.policiesNotDrawn[l-3]];
+
+        return topThree;
+    }
+
     isPresidentChoosen(){
         console.log('President: ' + this.president);
         if(this.president != ''){
@@ -130,6 +137,20 @@ module.exports = class Game{
         }
         return false
     }
+
+    //Return the democrative session we are currently in.
+    whichStepAreWeIn(){
+        if(this.isChancelorChoosen() && this.isPresidentChoosen()){
+            if(this.policiesInHand.length == 3){
+                return 1; //Democrative session 1
+            } else if (this.policiesInHand.length == 2){
+                return 2; //Democrative session 2
+            }
+        } else{
+            return 0;
+        }
+    }
+
     resetTurn(){
         this.president = '';
         this.chancelor = '';

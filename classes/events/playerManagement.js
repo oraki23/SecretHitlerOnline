@@ -1,8 +1,13 @@
 const Player = require('../Player.js');
 const playerStatus = require('../playerStatus');
 
+const facistManagement = require('./fascistManagement.js');
+const democrativeSessionLib = require('./democrativeSession.js');
+
 module.exports = function(io, context){
+
     io.sockets.on('connection', function(socket){
+
         socket.on('newPlayerConnected', (connectinfo) => {     
             //Add user if he is not already connected
             if(context.players.some(player => player.id == socket.id)){
@@ -16,6 +21,8 @@ module.exports = function(io, context){
                     message: 'Ce nom est déjà utilisé!'
                 });
             } else{
+                var newPlayerAdded = true;
+                var player;
                 //If the player tries to connect with username and same browserId,
                 //This means that it is a reconnect attempt.
                 //In case that the timeout would have expired, the player would not even exist anymore.
@@ -25,7 +32,7 @@ module.exports = function(io, context){
                     context.players[playerToReconnectIndex].setStatus(playerStatus.CONNECTED);
                     
                     //Return the card and the roleName
-                    var player = context.players[playerToReconnectIndex];
+                    player = context.players[playerToReconnectIndex];
                     io.to(socket.id).emit('reconnectionCompleted', {
                         roleName: player.role,
                         cardPlayed: context.game.policiesPlayed
@@ -37,19 +44,40 @@ module.exports = function(io, context){
 
                         io.to(socket.id).emit('presidentChoosen', president.name);
 
-                    } else if(context.game.isChancelorChoosen()){
+                    }
+                    if(context.game.isChancelorChoosen()){
                         var chancelorId = context.players.findIndex(pl => pl.name == context.game.chancelor);
                         var chancelor = context.players[chancelorId];
 
                         io.to(socket.id).emit('chancelorChoosen', chancelor.name);
                     }
+
+                    //Redo the reveal of roles
+                    facistManagement(context.players, io);
+
+                    if(context.game.whichStepAreWeIn() === 1){
+                        democrativeSessionLib.notifyPlayerOfDemocrativeSession1Started(context.game, player, io);
+                    } else if(context.game.whichStepAreWeIn() === 2){
+                        democrativeSessionLib.notifyPlayerOfDemocrativeSession2Started(context.game, player, io);
+                    }
+
+                } else if(context.gameIsStarted()){
+                    io.emit('customError', {
+                        destination : socket.id,
+                        message: 'La partie est déjà commencé! Veuillez attendre.'
+                    });
+
+                    newPlayerAdded = false;
                 } else {
                     var player = new Player(socket.id, connectinfo.browserId, connectinfo.username);
-                    context.addPlayer(player);    
+                    context.addPlayer(player);
+                    io.to(player.id).emit('connectionSuccessful');
                 }
 
-                io.emit('playerListModification', context.playersPublishable());
-                io.emit('playerRelatedAnnouncement', 'Un nouveau joueur a joint: ' + connectinfo.username);
+                if(newPlayerAdded){
+                    io.emit('playerListModification', context.playersPublishable());
+                    io.emit('playerRelatedAnnouncement', 'Un nouveau joueur a joint: ' + connectinfo.username);
+                }
             }
         });
 
@@ -64,7 +92,9 @@ module.exports = function(io, context){
             if(!context.gameIsStarted()){
                 context.removePlayer(socket.id);
             } else {
-                playerDisconnected.status = playerStatus.DISCONNECTED;
+                if(playerDisconnected !== undefined){
+                    playerDisconnected.status = playerStatus.DISCONNECTED;
+                }
             }
             if(playerDisconnected != null){
                 io.emit('playerListModification', context.playersPublishable());

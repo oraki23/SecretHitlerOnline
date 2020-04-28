@@ -3,7 +3,7 @@
     <head>
         <script src="/socket.io/socket.io.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-        <script src="/js/indexClient.js" type="text/javascript"></script>
+
         <link rel="stylesheet" href="/css/basic.css" type="text/css">
     </head>
     
@@ -60,6 +60,9 @@
         <div id="waiting" style="display:none;">
             <p>Veuillez patienter pendant que le président et le chancelier choisissent leur cartes :)</p>
         </div>
+        <div id="powerup1">
+            <button type="button" id="showTopThreeCards">Afficher les 3 cartes du dessus</button>
+        </div>
         
         <div id="adminControl" style="display:none;">
             <h2>Admin Controls</h2>
@@ -73,6 +76,9 @@
 
 <script>
     var socket;
+    var mySocketId;
+    var myUsername;
+
     function clickPolicy(value){
         socket.emit('policyChoosenPart1', value);
     }
@@ -89,26 +95,9 @@
 
     $(document).ready(function() {
         socket = io('ws://localhost:8000');
-        var mySocketId;
-        var myUsername;
+
         socket.on('connect', function(){
             mySocketId = socket.id;
-        });
-
-        $('#connectButton').on('click', function(){
-            if(localStorage.getItem('userUniqueId') == null){
-                var randomlyGeneratedUID = Math.random().toString(36).substring(3,16) + +new Date;
-                localStorage.setItem('userUniqueId', randomlyGeneratedUID);
-            }
-
-            var username = $('#username').val();
-            socket.emit('newPlayerConnected', {
-                username: username,
-                browserId: localStorage.getItem('userUniqueId')
-            });
-            myUsername = username;
-            $('#connectDiv').hide();
-            $('#startGame').show();
         });
 
         $('#startGame').on('click', function(){
@@ -125,7 +114,7 @@
 
         socket.on('playerRelatedAnnouncement', function(message){
                 $('#messages').prepend($('<li style="background-color:green;">').text(message));
-            });
+        });
 
         socket.on('playerListModification', function(playerInformations){
             $('#playerListTable').html('');
@@ -137,26 +126,10 @@
                 '</tr>');
             }
         });
-        
-        socket.on('reconnectionCompleted', function(informations){
-            $('#roleName').text(informations.roleName);
-            for(var i = 0; i < informations.cardPlayed.length; i++){
-                var card = informations.cardPlayed[i];
-                
-                if(card == 'Liberal'){
-                    addCardToLiberalBoard();
-                } else if(card == 'Facist'){
-                    addCardToFacistBoard();
-                }
-            }
-
-            $('#startGame').hide();
-            $('#playDiv').show();
-        });
 
         socket.on('messageGeneral', function(message){
                 $('#messages').prepend($('<li>').text(message));
-            });
+        });
 
         socket.on('customError', function(error){
             if(error.destination == mySocketId){
@@ -173,11 +146,9 @@
         });
 
         socket.on('hitlerRevealed', function(revelation){
-            if(revelation.destination == mySocketId){
-                $('#hitlerName').text(revelation.value);
+            $('#hitlerName').text(revelation.value);
 
-                $('#hitlerRevealName').show();
-            }
+            $('#hitlerRevealName').show();
         });
 
         socket.on('presidentChoosen', function(){
@@ -188,47 +159,43 @@
         });
 
         socket.on('democrativeSessionPart1', function(role){
-            if(role.destination == mySocketId){
-                $('#playDiv').hide();
+            $('#playDiv').hide();
 
-                if(role.role == 0){
+            if(role.role == 0){
 
-                    $('#waiting').show();
-                    //President
-                } else if(role.role == 1){
-                    $('#cardView').show();
+                $('#waiting').show();
+                //President
+            } else if(role.role == 1){
+                $('#cardView').show();
 
-                    var policies = role.policies;
-                    for(var i = 0; i < policies.length; i++){
-                        $('#cardView').append('<button type="button" onClick="clickPolicy(\'' + policies[i] + '\')">' + policies[i] + '</button>')
-                    }
-                    //chancelor
-                } else if(role.role == 2){
-                    $('#waiting').show();
+                var policies = role.policies;
+                for(var i = 0; i < policies.length; i++){
+                    $('#cardView').append('<button type="button" onClick="clickPolicy(\'' + policies[i] + '\')">' + policies[i] + '</button>')
                 }
+                //chancelor
+            } else if(role.role == 2){
+                $('#waiting').show();
             }
         });
 
         socket.on('democrativeSessionPart2', function(role){
-            if(role.destination == mySocketId){
-                $('#playDiv').hide();
+            $('#playDiv').hide();
 
-                if(role.role == 0){
+            if(role.role == 0){
 
-                    $('#waiting').show();
-                    //President
-                } else if(role.role == 1){
-                    $('#cardView').hide();
-                    $('#waiting').show();
-                    //chancelor
-                } else if(role.role == 2){
-                    $('#waiting').hide();
-                    $('#cardView').show();
+                $('#waiting').show();
+                //President
+            } else if(role.role == 1){
+                $('#cardView').hide();
+                $('#waiting').show();
+                //chancelor
+            } else if(role.role == 2){
+                $('#waiting').hide();
+                $('#cardView').show();
 
-                    var policies = role.policies;
-                    for(var i = 0; i < policies.length; i++){
-                        $('#cardView').append('<button type="button" onClick="clickPolicy2(\'' + policies[i] + '\')">' + policies[i] + '</button>')
-                    }
+                var policies = role.policies;
+                for(var i = 0; i < policies.length; i++){
+                    $('#cardView').append('<button type="button" onClick="clickPolicy2(\'' + policies[i] + '\')">' + policies[i] + '</button>')
                 }
             }
         });
@@ -251,16 +218,9 @@
                 }
             }
         });
-
-        //Administrative functions
-        $('#playRandomCard').on('click', function(){
-            socket.emit('playRandomCard');
-        });
-        $('#playLiberal').on('click', function(){
-
-        });
-        $('#playFacist').on('click', function(){
-            
-        });
     });
 </script>
+<script src="/js/indexClient.js" type="text/javascript"></script>
+<script src="/js/playerManagementClient.js" type="text/javascript"></script>
+<script src="/js/administrativeFunctionsClient.js" type="text/javascript"></script>
+<script src="/js/powerupsClient.js" type="text/javascript"></script>

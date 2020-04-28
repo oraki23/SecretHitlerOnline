@@ -12,6 +12,17 @@ var io = require('socket.io')(http);
 var context = new Context();
 
 const playerManagement = require('./classes/events/playerManagement.js')(io, context);
+const administrativeFunctions = require('./classes/events/administrativeFunctions.js')(io, context);
+const democrativeSessionLib = require('./classes/events/democrativeSession.js');
+
+const democrativeSession1Functions = democrativeSessionLib.democrativeSession1Launch(io, context);
+const democrativeSession2Functions = democrativeSessionLib.democrativeSession2Launch(io, context);
+
+const powerupsLib = require('./classes/events/powerups.js');
+
+const powerupShowTopThreeCards = powerupsLib.showTopThreeCards(io, context);
+
+const facistManagement = require('./classes/events/fascistManagement.js');
 
 app.use(express.static('public'));
 app.use('/socket.io', express.static(__dirname + '/node_modules/socket.io-client/dist'));
@@ -21,10 +32,7 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    
-
     //Flow Normal
-
     socket.on('startGame', (userId) => {
         console.log('Starting Game');
         var playerNumber = context.players.length;
@@ -46,124 +54,8 @@ io.on('connection', (socket) => {
                 });
             }
 
-            var facistPlayers = context.players.filter(pl => pl.role == 'Facist');
-            console.log(facistPlayers);
-            var hitlerPlayerId = context.players.findIndex(pl => pl.role == 'Hitler');
-            var hitlerPlayer = context.players[hitlerPlayerId];
-            console.log(hitlerPlayer);
-            for(var i = 0; i < facistPlayers.length; i++){
-                var player = facistPlayers[i];
-                console.log(player);
-                io.emit('hitlerRevealed', {
-                    destination : player.id,
-                    value: hitlerPlayer.name
-                });
-            }
-
-            if(context.game.numberOfPlayers < 7){
-                var facistPlayerId = context.players.findIndex(pl => pl.role == 'Facist');
-                var hitlerPlayerId = context.players.findIndex(pl => pl.role == 'Hitler');
-                var facistPlayer = context.players[facistPlayerId];
-                var hitlerPlayer = context.players[hitlerPlayerId];
-                io.emit('hitlerRevealed', {
-                    destination : hitlerPlayer.id,
-                    value: facistPlayer.name
-                });
-            }
+            facistManagement(context.players, io);
         } 
-    });
-
-    socket.on('IAmPresident', (username) => {
-        context.game.president = username;
-        
-        var presidentId = context.players.findIndex(pl => pl.name == username);
-        var president = context.players[presidentId];
-
-        console.log('Le président est: ' + president.name);
-
-        io.emit('presidentChoosen', president.name);
-
-        if(context.game.isPresidentChoosen() && context.game.isChancelorChoosen()){
-            console.log('Democrative session started (from IAmPresident)');
-            context.game.drawThreePolicy();
-            console.log('Start of game, the 3 policies are: ' + context.game.policiesInHand);
-            for(var i = 0; i < context.players.length; i++){
-                var player = context.players[i];
-                var role = 0;
-                if(player.name == context.game.president){
-                    console.log('President assigned!');
-                    role = 1;
-                } else if (player.name == context.game.chancelor){
-                    console.log('Chancelor assigned!');
-                    role = 2;
-                }
-
-                var policies = context.game.policiesInHand;
-                io.emit('democrativeSessionPart1', {
-                    destination: player.id,
-                    role: role,
-                    policies: policies
-                });
-            }
-        }
-    });
-    socket.on('IAmChancelor', (username) => {
-        context.game.chancelor = username;
-
-        var chancelorId = context.players.findIndex(pl => pl.name == username);
-        var chancelor = context.players[chancelorId];
-
-        console.log('Le chancelier est: ' + chancelor.name);
-
-        io.emit('chancelorChoosen', chancelor.name);
-
-        if(context.game.isPresidentChoosen() && context.game.isChancelorChoosen()){
-            console.log('Democrative session started (from IAmChancelor)');
-            context.game.drawThreePolicy();
-            console.log('Start of game, the 3 policies are: ' + context.game.policiesInHand);
-            for(var i = 0; i < context.players.length; i++){
-                var player = context.players[i];
-                var role = 0;
-                if(player.name == context.game.president){
-                    console.log('President assigned!');
-                    role = 1;
-                } else if (player.name == context.game.chancelor){
-                    console.log('Chancelor assigned!');
-                    role = 2;
-                }
-
-                var policies = context.game.policiesInHand;
-                io.emit('democrativeSessionPart1', {
-                    destination: player.id,
-                    role: role,
-                    policies: policies
-                });
-            }
-        }
-    });
-
-    socket.on('policyChoosenPart1', (choosenPolicy) => {
-        //TODO: Remove one policy from the In Hand ones
-        console.log('Choosen Policy : ' + choosenPolicy);
-        context.game.putPolicyBack(choosenPolicy);
-
-        console.log('President has played, the 2 policies left are: ' + context.game.policiesInHand);
-        for(var i = 0; i < context.players.length; i++){
-            var player = context.players[i];
-            var role = 0;
-            if(player.name == context.game.president){
-                role = 1;
-            } else if (player.name == context.game.chancelor){
-                role = 2;
-            }
-            
-            var policies = context.game.policiesInHand;
-            io.emit('democrativeSessionPart2', {
-                destination: player.id,
-                role: role,
-                policies: policies
-            });
-        }
     });
 
     socket.on('policyChoosenPart2', (choosenPolicy) => {
@@ -200,30 +92,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    //Administrative Controls
-    socket.on('playRandomCard', () => {
-        var randomPlayedPolicy = context.game.playRandomPolicy();
-
-        console.log('Random policy removed: ' + randomPlayedPolicy);
-
-        console.log('There are ' + context.game.policiesNotDrawn.length + ' policies not drawn');
-        if(context.game.policiesNotDrawn.length < 3){
-            io.emit('messageGeneral', 'Le deck a été brassé!');
-
-            context.game.shuffleDeck();
-        }     
-
-        for(var i = 0; i < context.players.length; i++){
-            var player = context.players[i];
-
-            io.emit('democrativeSessionEnd', {
-                destination: player.id,
-                playedPolicy: randomPlayedPolicy
-            });
-
-            context.game.resetTurn();
-        }
-    });
 });
 
 http.listen(8000, () => {
