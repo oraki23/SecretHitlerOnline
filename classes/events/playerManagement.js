@@ -35,7 +35,9 @@ module.exports = function(io, context){
                     player = context.players[playerToReconnectIndex];
                     io.to(socket.id).emit('reconnectionCompleted', {
                         roleName: player.role,
-                        cardPlayed: context.game.policiesPlayed
+                        nbOfFacistCards: context.game.getNumberOfFacistPlayed(),
+                        nbOfLiberalCards: context.game.getNumberOfLiberalPlayed(),
+                        nbOfPlayers: context.game.numberOfPlayers
                     });
                     //Return if the president and chancelor were choosen
                     if(context.game.isPresidentChoosen()){        

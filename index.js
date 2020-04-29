@@ -82,10 +82,12 @@ io.on('connection', (socket) => {
                 role = 2;
             }
 
-            io.emit('democrativeSessionEnd', {
-                destination: player.id,
+            io.to(player.id).emit('democrativeSessionEnd', {
                 role: role,
-                playedPolicy: playedPolicy
+                playedPolicy: playedPolicy,
+                nbOfFacistCards: context.game.getNumberOfFacistPlayed(),
+                nbOfLiberalCards: context.game.getNumberOfLiberalPlayed(),
+                nbOfPlayers: context.game.numberOfPlayers
             });
 
             context.game.resetTurn();

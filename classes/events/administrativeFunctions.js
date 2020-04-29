@@ -14,9 +14,11 @@ module.exports = function(io, context){
             for(var i = 0; i < context.players.length; i++){
                 var player = context.players[i];
 
-                io.emit('democrativeSessionEnd', {
-                    destination: player.id,
-                    playedPolicy: randomPlayedPolicy
+                io.to(player.id).emit('democrativeSessionEnd', {
+                    playedPolicy: randomPlayedPolicy,
+                    nbOfFacistCards: context.game.getNumberOfFacistPlayed(),
+                    nbOfLiberalCards: context.game.getNumberOfLiberalPlayed(),
+                    nbOfPlayers: context.game.numberOfPlayers
                 });
 
                 context.game.resetTurn();

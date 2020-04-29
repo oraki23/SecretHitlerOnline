@@ -5,8 +5,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
         <link rel="stylesheet" href="/css/basic.css" type="text/css">
-    </head>
-    
+
     <body>
         <div id="message__container">
             <ul id="messages"></ul>
@@ -33,17 +32,17 @@
             <h2>Le Plateau</h2>
 
             <p>Facistes</p>
-            <div id="facistBoard">
-
+            <div>
+                <img id="facistBoard" src="img/boardFacist5-6p/boardFacist5-6p-0.png" width="40%">
             </div>
 
             <p>Libérals</p>
-            <div id="liberalBoard">
-
+            <div>
+                <img id="liberalBoard" src="img/boardLiberal/boardLiberal-0.png" width="40%">
             </div>
         </div>
         <div id="connectDiv">
-            <h1>Secret Hitlet Online!</h1>
+            <h1>Secret Hitler Online!</h1>
             <input id="username" type="text" name="username"/>
             <button type="button" id="connectButton">Se Connecter!</button>
         </div> 
@@ -96,6 +95,17 @@
     }
     function addCardToFacistBoard(){
         $('#facistBoard').append('<p>F</p>');
+    }
+
+    function drawBoard(numberOfPlayers, numberOfFacistPlayed, numberOfLiberalPlayed){
+        $('#liberalBoard').attr('src', 'img/boardLiberal/boardLiberal-' + numberOfLiberalPlayed + '.png');
+        if(numberOfPlayers == 5 || numberOfPlayers == 6){
+            $('#facistBoard').attr('src', 'img/boardFacist5-6p/boardFacist5-6p-' + numberOfFacistPlayed + '.png');
+        } else if(numberOfPlayers == 7 || numberOfPlayers == 8){
+            $('#facistBoard').attr('src', 'img/boardFacist7-8p/boardFacist7-8p-' + numberOfFacistPlayed + '.png');
+        } else if(numberOfPlayers == 9 || numberOfPlayers == 10){
+            $('#facistBoard').attr('src', 'img/boardFacist9-10p/boardFacist9-10p-' + numberOfFacistPlayed + '.png');
+        }
     }
 
     $(document).ready(function() {
@@ -206,22 +216,15 @@
         });
 
         socket.on('democrativeSessionEnd', function(role){
-            if(role.destination == mySocketId){
+            $('#waiting').hide();
+            $('#cardView').hide();
+            $('#cardView').html('');
 
-                $('#waiting').hide();
-                $('#cardView').hide();
-                $('#cardView').html('');
-                
-                $('#IAmPresident').show();
-                $('#IAmChancelor').show();
-                $('#playDiv').show();
+            $('#IAmPresident').show();
+            $('#IAmChancelor').show();
+            $('#playDiv').show();
 
-                if(role.playedPolicy == 'Facist'){
-                    $('#facistBoard').append('<p>F</p>');
-                } else if(role.playedPolicy == 'Liberal'){
-                    $('#liberalBoard').append('<p>L</p>');
-                }
-            }
+            drawBoard(role.nbOfPlayers, role.nbOfFacistCards, role.nbOfLiberalCards);
         });
     });
 </script>

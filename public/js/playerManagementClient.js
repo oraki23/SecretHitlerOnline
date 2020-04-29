@@ -23,15 +23,8 @@ $(document).ready(function() {
     //Receiving connections
     socket.on('reconnectionCompleted', function(informations){
         $('#roleName').text(informations.roleName);
-        for(var i = 0; i < informations.cardPlayed.length; i++){
-            var card = informations.cardPlayed[i];
 
-            if(card == 'Liberal'){
-                addCardToLiberalBoard();
-            } else if(card == 'Facist'){
-                addCardToFacistBoard();
-            }
-        }
+        drawBoard(informations.nbOfPlayers, informations.nbOfFacistCards, informations.nbOfLiberalCards);
 
         $('#connectDiv').hide();
         $('#startGame').hide();

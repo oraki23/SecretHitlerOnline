@@ -173,6 +173,22 @@ module.exports = class Game{
         }
     }
 
+    getNumberOfFacistPlayed(){
+        var facistPlayed = this.policiesPlayed.filter(po => po == 'Facist')
+        if(facistPlayed !== undefined){
+            return facistPlayed.length;
+        }
+        return 0;
+    }
+
+    getNumberOfLiberalPlayed(){
+        var liberalPlayed = this.policiesPlayed.filter(po => po == 'Liberal');
+        if(liberalPlayed !== undefined){
+            return liberalPlayed.length;
+        }
+        return 0;
+    }
+
     shuffle(array) {
         var currentIndex = array.length, temporaryValue, randomIndex;
       
