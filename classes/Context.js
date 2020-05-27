@@ -1,3 +1,5 @@
+const playerStatus = require('./playerStatus');
+
 module.exports = class Context{
     constructor(){
         this.players = [];
@@ -14,6 +16,16 @@ module.exports = class Context{
 
     findPlayerById(socketId){
         return this.players.find(player => player.id === socketId);
+    }
+
+    removeDisconnectedPlayers(){
+        for(var i = 0; i < this.players.length; i++){
+            var player = this.players[i];
+            if(player.status != playerStatus.CONNECTED){
+                this.removePlayer(player.id);
+                i--;
+            }
+        }
     }
 
     gameIsStarted(){

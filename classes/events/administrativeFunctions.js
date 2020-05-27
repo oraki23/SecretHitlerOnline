@@ -1,3 +1,5 @@
+const playerStatus = require('../playerStatus');
+
 module.exports = function(io, context){
     io.sockets.on('connection', function(socket){
         socket.on('playRandomCard', () => {
@@ -23,6 +25,23 @@ module.exports = function(io, context){
 
                 context.game.resetTurn();
             }
+        });
+
+        socket.on('resetGame', () => {
+            context.game = null;
+            context.removeDisconnectedPlayers();
+            //Remove cards of players
+            for(var i = 0; i < context.players.length; i++){
+                var player = context.players[i];
+                player.resetRole();
+
+                io.to(player.id).emit('resetGameNotification', {
+                    isConnected: player.status == playerStatus.CONNECTED
+                });
+            }
+
+            io.emit('playerListModification', context.playersPublishable());
+            io.emit('messageGeneral', 'La partie a été réinitialisée!');
         });
     });
 }

@@ -9,4 +9,33 @@ $(document).ready(function() {
     $('#playFacist').on('click', function(){
 
     });
+    $('#resetTurn').on('click', function(){
+        socket.emit('resetGame');
+    });
+
+    //Reset Turn received Event
+    socket.on('resetGameNotification', function(data){
+        if(data.isConnected){
+            $('#connectDiv').hide();
+            $('#startGame').show();
+        } else{
+            $('#connectDiv').show();
+            $('#startGame').hide();
+        }
+
+
+        $('#playDiv').hide();
+        $('#hitlerRevealName').hide();
+
+        $('#IAmPresident').show();
+        $('#IAmChancelor').show();
+        $('#cardView').hide();
+        $('#waiting').hide();
+
+        $('#roleName').text('------');
+
+        $('#liberalBoard').attr('src', 'img/boardLiberal/boardLiberal-0.png');
+        $('#facistBoard').attr('src', 'img/boardFacist5-6p/boardFacist5-6p-0.png');
+
+    });
 });

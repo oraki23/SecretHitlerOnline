@@ -1,6 +1,4 @@
 var showTopThreeCards = function(io, context){
-
-
     io.sockets.on('connection', function(socket){
         socket.on('showTopThreeCards', (socketId) => {
             var topThree = context.game.getThreeTopPolicyValues();

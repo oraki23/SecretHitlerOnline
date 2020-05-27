@@ -12,7 +12,6 @@ $(document).ready(function() {
             username: username,
             browserId: localStorage.getItem('userUniqueId')
         });
-        myUsername = username;
     });
 
     socket.on('connectionSuccessful', function () {
