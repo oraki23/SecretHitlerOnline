@@ -10,13 +10,28 @@ $(document).ready(function() {
 
     });
     $('#resetTurn').on('click', function(){
-        socket.emit('resetGame');
+        socket.emit('resetTurn');
     });
     $('#resetGame').on('click', function(){
         socket.emit('resetGame');
     });
 
     //Reset Turn received Event
+    socket.on('resetTurnNotification', function(data){
+
+        $('#playDiv').show();
+
+        $('#IAmPresident').show();
+        $('#IAmChancelor').show();
+        $('#cardView').hide();
+        $('#cardView').html('');
+        $('#waiting').hide();
+
+        $('#powerupShowTopThreeCards').hide();
+
+    });
+
+    //Reset game received Event
     socket.on('resetGameNotification', function(data){
         if(data.isConnected){
             $('#connectDiv').hide();

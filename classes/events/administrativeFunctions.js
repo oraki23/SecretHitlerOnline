@@ -22,9 +22,18 @@ module.exports = function(io, context){
                     nbOfLiberalCards: context.game.getNumberOfLiberalPlayed(),
                     nbOfPlayers: context.game.numberOfPlayers
                 });
-
-                context.game.resetTurn();
             }
+            context.game.resetTurn();
+        });
+
+        socket.on('resetTurn', () => {
+            context.game.resetTurn();
+            context.game.putAllPoliciesInHandBackInDeck();
+
+            io.emit('messageGeneral', 'La tour actuel a été réinitialisé!');
+            io.emit('resetTurnNotification', {
+
+            });
         });
 
         socket.on('resetGame', () => {

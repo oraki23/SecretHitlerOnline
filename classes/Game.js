@@ -93,6 +93,10 @@ module.exports = class Game{
         this.policiesInHand.splice(index, 1);
     }
 
+    getLastPlayedPolicy(){
+        return this.policiesPlayed[this.policiesPlayed.length-1];
+    }
+
     /**
      * Choose a random policy from deck to play it, removes it from the deck, add it to the played area, and then returns it.
      */
@@ -109,6 +113,15 @@ module.exports = class Game{
 
         var index = this.policiesInHand.indexOf(policy);
         this.policiesInHand.splice(index, 1);
+    }
+
+    putAllPoliciesInHandBackInDeck(){
+        while(this.policiesInHand.length != 0){
+            this.policiesNotDrawn.push(this.policiesInHand[0]);
+
+            var index = this.policiesInHand.indexOf(this.policiesInHand[0]);
+            this.policiesInHand.splice(index, 1);
+        }
     }
 
     drawThreePolicy(){
@@ -191,20 +204,20 @@ module.exports = class Game{
 
     shuffle(array) {
         var currentIndex = array.length, temporaryValue, randomIndex;
-      
+
         // While there remain elements to shuffle...
         while (0 !== currentIndex) {
-      
+
           // Pick a remaining element...
           randomIndex = Math.floor(Math.random() * currentIndex);
           currentIndex -= 1;
-      
+
           // And swap it with the current element.
           temporaryValue = array[currentIndex];
           array[currentIndex] = array[randomIndex];
           array[randomIndex] = temporaryValue;
         }
-      
+
         return array;
       }
 }
