@@ -89,10 +89,59 @@ var democrativeSession2Launch = function(io, context){
     });
 }
 
+var democrativeSessionEnd = function(io, context){
+    io.sockets.on('connection', function(socket) {
+        socket.on('policyChoosenPart2', (choosenPolicy) => {
+            context.game.putPolicyBack(choosenPolicy);
+            var playedPolicy = context.game.policiesInHand[0];
+            context.game.playPolicy(playedPolicy);
+
+            console.log('Chancelor has played, the removed is: ' + choosenPolicy);
+            console.log('The played one is: ' + playedPolicy);
+
+            console.log('There are ' + context.game.policiesNotDrawn.length + ' policies not drawn');
+            if(context.game.policiesNotDrawn.length < 3){
+                io.emit('messageGeneral', 'Le deck a été brassé!');
+
+                context.game.shuffleDeck();
+            }
+
+            for(var i = 0; i < context.players.length; i++){
+                var player = context.players[i];
+                var role = 0;
+                if(player.name == context.game.president){
+                    role = 1;
+                } else if (player.name == context.game.chancelor){
+                    role = 2;
+                }
+
+                io.to(player.id).emit('democrativeSessionEnd', {
+                    role: role,
+                    playedPolicy: playedPolicy,
+                    nbOfFacistCards: context.game.getNumberOfFacistPlayed(),
+                    nbOfLiberalCards: context.game.getNumberOfLiberalPlayed(),
+                    nbOfPlayers: context.game.numberOfPlayers
+                });
+
+                //IF, we are 5-6 players, and I am the lastest president, and the card just played was facist and that there are now 3 facists policies on the table
+                //(Rule)
+                if((context.game.numberOfPlayers == 5 || context.game.numberOfPlayers == 6) &&
+                    role == 1 &&
+                    playedPolicy === 'Facist' &&
+                    context.game.getNumberOfFacistPlayed() === 3){
+                    io.to(player.id).emit('ShowTopThreeCardsPowerAllowed');
+                }
+                context.game.resetTurn();
+            }
+        });
+    });
+}
+
 
 module.exports = {
     notifyPlayerOfDemocrativeSession1Started: notifyPlayerOfDemocrativeSession1Started,
     notifyPlayerOfDemocrativeSession2Started: notifyPlayerOfDemocrativeSession2Started,
     democrativeSession1Launch: democrativeSession1Launch,
-    democrativeSession2Launch: democrativeSession2Launch
+    democrativeSession2Launch: democrativeSession2Launch,
+    democrativeSessionEnd: democrativeSessionEnd
 };

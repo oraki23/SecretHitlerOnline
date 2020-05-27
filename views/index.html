@@ -10,6 +10,11 @@
         <div id="message__container">
             <ul id="messages"></ul>
         </div>
+        <div id="connectDiv">
+            <h1>Secret Hitler Online!</h1>
+            <input id="username" type="text" name="username"/>
+            <button type="button" id="connectButton">Se Connecter!</button>
+        </div>
         <div id="playerList">
             <h2>Les joueurs</h2>
             <table id="playerListTable">
@@ -41,11 +46,6 @@
                 <img id="liberalBoard" src="img/boardLiberal/boardLiberal-0.png" width="40%">
             </div>
         </div>
-        <div id="connectDiv">
-            <h1>Secret Hitler Online!</h1>
-            <input id="username" type="text" name="username"/>
-            <button type="button" id="connectButton">Se Connecter!</button>
-        </div>
         <div id="startGame" style="display:none;">
             <button type="button">Démarrer la partie!</button>
         </div>
@@ -53,18 +53,20 @@
             <button type="button" id="IAmPresident">Je suis Président!</button>
             <button type="button" id="IAmChancelor">Je suis Chancelier!</button>
 
-            <div id="powerup1" style="margin:20px">
-                <button type="button" id="showTopThreeCards">Afficher les 3 cartes du dessus</button>
-            </div>
+
         </div>
         <div id="cardView" style="display:none;">
+            <h3>Veuillez sélectionner la carte que vous voulez <strong>retirer</strong></h3>
             <!-- Des boutons avec les cartes seront ajoutés-->
         </div>
         <div id="waiting" style="display:none;">
             <p>Veuillez patienter pendant que le président et le chancelier choisissent leur cartes :)</p>
         </div>
         <div id="powerups">
-
+            <div id="powerupShowTopThreeCards" style="margin:20px;display:none;">
+                <p><strong>ATTENTION!</strong> Vous ne pourrez les voir qu'une seule fois !</p>
+                <button type="button" id="showTopThreeCards">Afficher les 3 cartes du dessus</button>
+            </div>
         </div>
 
 
@@ -73,7 +75,8 @@
             <button id="playRandomCard">Jouer la première carte random</button>
             <button id="playLiberal">[N] Mettre une carte Libérale</button>
             <button id="playFacist">[N] Mettre une carte Faciste</button>
-            <button id="resetTurn">Reset le tour</button>
+            <button id="resetTurn">[N] Reset le tour</button>
+            <button id="resetGame">Reset la game</button>
         </div>
     </body>
 </html>
@@ -153,9 +156,11 @@
         });
 
         socket.on('cardGiving', function(card){
-            if(card.destination == mySocketId){
-                $('#roleName').text(card.value);
-            }
+            $('#roleName').text(card.value);
+
+            //Setup the basic board
+            drawBoard(card.nbOfPlayers,0,0);
+
             $('#startGame').hide();
             $('#playDiv').show();
         });
@@ -185,7 +190,7 @@
 
                 var policies = role.policies;
                 for(var i = 0; i < policies.length; i++){
-                    $('#cardView').append('<button type="button" onClick="clickPolicy(\'' + policies[i] + '\')">' + policies[i] + '</button>')
+                    $('#cardView').append('<img class="policyCard" width="100" src="img/policies/' + policies[i] + 'Policy.png" onClick="clickPolicy(\'' + policies[i] + '\')"/>');
                 }
                 //chancelor
             } else if(role.role == 2){
@@ -210,7 +215,7 @@
 
                 var policies = role.policies;
                 for(var i = 0; i < policies.length; i++){
-                    $('#cardView').append('<button type="button" onClick="clickPolicy2(\'' + policies[i] + '\')">' + policies[i] + '</button>')
+                    $('#cardView').append('<img class="policyCard" width="100" src="img/policies/' + policies[i] + 'Policy.png" onClick="clickPolicy2(\'' + policies[i] + '\')"/>');
                 }
             }
         });

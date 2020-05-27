@@ -5,17 +5,22 @@
     overflow-wrap: normal;
 }
 
-#messages { 
-    list-style-type: none; 
-    margin: 0; padding: 0; 
+#messages {
+    list-style-type: none;
+    margin: 0; padding: 0;
 }
-#messages li { 
-    padding: 5px 10px; 
+#messages li {
+    padding: 5px 10px;
 }
-#messages li:nth-child(odd) { 
-    background: #eee; 
+#messages li:nth-child(odd) {
+    background: #eee;
 }
 
 .errorMessage{
     background:red !important;
+}
+
+.policyCard{
+    margin-left:10px;
+    margin-right:10px;
 }

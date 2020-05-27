@@ -8,7 +8,6 @@ var showTopThreeCards = function(io, context){
     });
 }
 
-
 module.exports = {
     showTopThreeCards: showTopThreeCards
 };

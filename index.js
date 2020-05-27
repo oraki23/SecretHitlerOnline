@@ -17,6 +17,8 @@ const democrativeSessionLib = require('./classes/events/democrativeSession.js');
 
 const democrativeSession1Functions = democrativeSessionLib.democrativeSession1Launch(io, context);
 const democrativeSession2Functions = democrativeSessionLib.democrativeSession2Launch(io, context);
+const democrativeSessionEnd = democrativeSessionLib.democrativeSessionEnd(io, context);
+
 
 const powerupsLib = require('./classes/events/powerups.js');
 
@@ -48,49 +50,13 @@ io.on('connection', (socket) => {
             for(var i = 0; i < context.players.length; i++){
                 var player = context.players[i];
                 player.giveRole(context.game.cards.pop());
-                io.emit('cardGiving', {
-                    destination : player.id,
+                io.to(player.id).emit('cardGiving', {
                     value: player.role,
+                    nbOfPlayers: context.game.numberOfPlayers
                 });
             }
 
             facistManagement(context.players, io);
-        } 
-    });
-
-    socket.on('policyChoosenPart2', (choosenPolicy) => {
-        context.game.putPolicyBack(choosenPolicy);
-        var playedPolicy = context.game.policiesInHand[0];
-        context.game.playPolicy(playedPolicy);
-
-        console.log('Chancelor has played, the removed is: ' + choosenPolicy);
-        console.log('The played one is: ' + playedPolicy);
-
-        console.log('There are ' + context.game.policiesNotDrawn.length + ' policies not drawn');
-        if(context.game.policiesNotDrawn.length < 3){
-            io.emit('messageGeneral', 'Le deck a été brassé!');
-
-            context.game.shuffleDeck();
-        }        
-
-        for(var i = 0; i < context.players.length; i++){
-            var player = context.players[i];
-            var role = 0;
-            if(player.name == context.game.president){
-                role = 1;
-            } else if (player.name == context.game.chancelor){
-                role = 2;
-            }
-
-            io.to(player.id).emit('democrativeSessionEnd', {
-                role: role,
-                playedPolicy: playedPolicy,
-                nbOfFacistCards: context.game.getNumberOfFacistPlayed(),
-                nbOfLiberalCards: context.game.getNumberOfLiberalPlayed(),
-                nbOfPlayers: context.game.numberOfPlayers
-            });
-
-            context.game.resetTurn();
         }
     });
 
