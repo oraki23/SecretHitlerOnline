@@ -50,7 +50,7 @@ $(document).ready(function() {
         $('#cardView').html('');
         $('#waiting').hide();
 
-        $('#roleName').text('------');
+        $('#roleName').html('');
 
         $('#liberalBoard').attr('src', 'img/boardLiberal/boardLiberal-0.png');
         $('#facistBoard').attr('src', 'img/boardFacist5-6p/boardFacist5-6p-0.png');

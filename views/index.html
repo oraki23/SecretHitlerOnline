@@ -27,7 +27,7 @@
         </div>
         <div class="personnalInformation">
             <h2>Votre Rôle:</h2>
-            <p id="roleName">------</p>
+            <div id="roleName"></div>
             <div id="hitlerRevealName" style="display:none;">
                 <h3>Votre hitler (ou votre faciste, si vous êtes Hitler) est:</h3>
                 <p id="hitlerName"></p>
@@ -156,7 +156,7 @@
         });
 
         socket.on('cardGiving', function(card){
-            $('#roleName').text(card.value);
+            $('#roleName').append('<img class="roleCard" width="100" src="img/roles/' + card.value + 'Role.png" />');
 
             //Setup the basic board
             drawBoard(card.nbOfPlayers,0,0);

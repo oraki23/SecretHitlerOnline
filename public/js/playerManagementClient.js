@@ -21,7 +21,7 @@ $(document).ready(function() {
 
     //Receiving connections
     socket.on('reconnectionCompleted', function(informations){
-        $('#roleName').text(informations.roleName);
+        $('#roleName').append('<img class="roleCard" width="100" src="img/roles/' + informations.roleName + 'Role.png" />');
 
         drawBoard(informations.nbOfPlayers, informations.nbOfFacistCards, informations.nbOfLiberalCards);
 
