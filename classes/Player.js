@@ -27,4 +27,8 @@ module.exports = class Player{
     giveRole(role){
         this.role = role;
     }
+
+    resetRole(){
+        this.role = '';
+    }
 }
