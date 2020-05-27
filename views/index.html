@@ -45,7 +45,7 @@
             <h1>Secret Hitler Online!</h1>
             <input id="username" type="text" name="username"/>
             <button type="button" id="connectButton">Se Connecter!</button>
-        </div> 
+        </div>
         <div id="startGame" style="display:none;">
             <button type="button">Démarrer la partie!</button>
         </div>
@@ -67,7 +67,7 @@
 
         </div>
 
-        
+
         <div id="adminControl" style="display:none;">
             <h2>Admin Controls</h2>
             <button id="playRandomCard">Jouer la première carte random</button>
@@ -89,7 +89,7 @@
     function clickPolicy2(value){
         socket.emit('policyChoosenPart2', value);
     }
-    
+
     function addCardToLiberalBoard(){
         $('#liberalBoard').append('<p>L</p>');
     }
@@ -109,7 +109,7 @@
     }
 
     $(document).ready(function() {
-        socket = io('ws://localhost:8000');
+        socket = io('ws://' + window.location.host);
 
         socket.on('connect', function(){
             mySocketId = socket.id;
